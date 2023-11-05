@@ -4,7 +4,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
 import { InjectModel } from '@nestjs/mongoose';
+
 import { Model, isValidObjectId } from 'mongoose';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
@@ -16,6 +19,7 @@ export class PokemonService {
   constructor(
     @InjectModel(Pokemon.name)
     private readonly pokemonModel: Model<Pokemon>,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createPokemonDto: CreatePokemonDto): Promise<Pokemon> {
@@ -36,7 +40,8 @@ export class PokemonService {
   }
 
   async findAll(paginationDto: PaginationDto): Promise<Pokemon[]> {
-    const { limit = 10, offset = 0 } = paginationDto;
+    const defaultLimit = this.configService.get<number>('defaultLimit');
+    const { limit = defaultLimit, offset = 0 } = paginationDto;
 
     const pokemons = await this.pokemonModel
       .find()
